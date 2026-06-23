@@ -117,3 +117,40 @@ Trade-off: Faster loading, but users need to load more pages for older notificat
 
 Store recently accessed notifications in cache.
 Trade-off: Much faster reads, but cache must be updated when notifications change.
+
+# Stage 5
+
+Problems with the Current Approach
+
+The current algorithm sends notifications one student at a time. This creates several issues:
+
+* Sequential processing is slow. Sending notifications to 50,000 students one by one takes a long time.
+* If one operation fails, the remaining students may not receive notifications.
+* Email sending and database storage depend on each other. If the email service fails, the notification may not be saved.
+* There is no retry mechanism for failed notifications.
+* The request remains blocked until all notifications are processed.
+
+Improved Approach
+
+1. Store all notifications in the database using a bulk insert.
+2. Add each notification to a message queue.
+3. Return the response immediately without waiting for notification delivery.
+4. Background workers process the queue by:
+
+   * Sending email notifications.
+   * Sending in-app notifications.
+   * Retrying failed jobs up to three times.
+5. Store permanently failed jobs in a `failed_notifications` table for later processing.
+
+Benefits
+
+* Bulk insert reduces the number of database queries.
+* Queue-based processing allows multiple workers to send notifications in parallel.
+* Database storage is independent of email delivery.
+* Failed notifications are automatically retried.
+* Faster API response because the request is non-blocking.
+* Easy to scale by increasing the number of background workers during peak periods.
+
+Database and Email
+
+Notifications should always be saved to the database before sending emails. Email delivery depends on external services and may fail due to network issues or API limits. Saving the notification first ensures that students can still view it in the application even if the email is not delivered.
