@@ -3,7 +3,7 @@ require("dotenv").config();
 const logapi = process.env.LOG_API;
 const token = process.env.API_TOKEN;
 
-async function Log(stack,level,packageName,message) {
+export async function Log(stack,level,packageName,message) {
     try{
         const res = await fetch(logapi,{
             method : "POST",
@@ -25,8 +25,4 @@ async function Log(stack,level,packageName,message) {
     {
         console.log(error);
     }
-}
-
-module.exports = {
-    Log
 }
