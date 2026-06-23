@@ -52,3 +52,50 @@ Add indexes on student_id and vehicle_id.
 Use pagination for notifications.
 Cache frequently accessed data.
 Use load balancing and database read replicas.
+
+# Stage 3
+
+SELECT *
+FROM notifications
+WHERE student_id = 1042
+  AND is_read = false
+ORDER BY created_at DESC;
+
+Yes. It correctly fetches unread notifications for a student in descending order of creation time.
+
+WHY IT IS SLOW ?
+
+When notifications grow from 50K to 500K+, PostgreSQL may perform a full table scan and then sort the results if suitable indexes are not available. This increases query execution time.
+
+Time Complexity :
+
+Search: O(n)
+Sorting: O(k log k) (where k is the number of matching rows )
+
+What would you change?
+
+Create a composite index on the columns used in filtering and sorting.
+
+CREATE INDEX idx_notifications_student_read_created
+ON notifications (student_id, is_read, created_at DESC);
+
+This helps PostgreSQL quickly locate matching rows and return them in the required order.
+
+Is adding indexes always safe?
+
+No.
+
+Indexes improve SELECT performance but:
+
+Increase storage usage.
+Slow down INSERT, UPDATE, and DELETE operations because indexes must also be updated.
+
+Indexes should be added only for frequently queried columns.
+
+Query: Students who received Placement notifications in the last 7 days
+SELECT DISTINCT student_id
+FROM notifications
+WHERE notification_type = 'Placement'
+  AND created_at >= NOW() - INTERVAL '7 days';
+
+This returns all unique students who received Placement notifications during the last seven days.
