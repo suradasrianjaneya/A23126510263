@@ -99,3 +99,21 @@ WHERE notification_type = 'Placement'
   AND created_at >= NOW() - INTERVAL '7 days';
 
 This returns all unique students who received Placement notifications during the last seven days.
+
+# Stage 4
+
+Reducing Database Load
+
+Fetching notifications on every page load increases database load and slows the user experience.
+
+Suggested Solutions
+
+1. Pagination (Recommended)
+
+Fetch only 10–20 notifications at a time.
+Trade-off: Faster loading, but users need to load more pages for older notifications.
+
+2. Caching (Redis)
+
+Store recently accessed notifications in cache.
+Trade-off: Much faster reads, but cache must be updated when notifications change.
